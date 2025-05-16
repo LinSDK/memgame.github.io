@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Image Memory Game</title>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      font-family: sans-serif;
+      background: linear-gradient(to right, orange, yellow);
+      overflow: hidden;
+    }
+
+    body {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .screen {
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      width: 100%;
+      text-align: center;
+      padding: 20px;
+    }
+
+    .screen.active {
+      display: flex;
+    }
+
+    .logo {
+      margin-bottom: 20px;
+    }
+
+    .logo img {
+      max-width: 300px;
+      height: auto;
+    }
+
+    .game-logo {
+      position: relative;
+      top: 20px;
+    }
+
+    .button {
+      margin-top: 20px;
+      padding: 12px 25px;
+      font-size: clamp(1rem, 3vw, 1.5rem);
+      border: none;
+      border-radius: 5px;
+      background-color: yellow;
+      color: #333;
+      cursor: pointer;
+      font-weight: bold;
+    }
+
+    h1 {
+      color: white;
+      text-shadow: 2px 2px 4px #000;
+      font-size: clamp(1.8rem, 5vw, 3rem);
+      margin: 1vh 0;
+    }
+
+    #timer {
+      color: white;
+      font-size: clamp(1.3rem, 4vw, 2rem);
+      margin-bottom: 1.5vh;
+      text-shadow: 2px 2px 4px #000;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: clamp(5px, 1.5vw, 10px);
+      width: 100%;
+      max-width: 600px;
+      padding: 5px;
+      height: auto;
+      flex-grow: 0;
+    }
+
+    .card {
+      width: 100%;
+      aspect-ratio: 4 / 5;
+      perspective: 1000px;
+      cursor: pointer;
+    }
+
+    .card-inner {
+      width: 100%;
+      height: 100%;
+      position: relative;
+      transform-style: preserve-3d;
+      transition: transform 0.6s;
+    }
+
+    .card.flipped .card-inner {
+      transform: rotateY(180deg);
+    }
+
+    .card-front,
+    .card-back {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      backface-visibility: hidden;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+
+    .card-front {
+      background-color: white;
+      transform: rotateY(180deg);
+    }
+
+    .card-front img {
+      max-width: 80%;
+      max-height: 80%;
+      object-fit: contain;
+    }
+
+    .card-back {
+      background-color: orange;
+    }
+
+    .card.matched {
+      opacity: 0.5;
+      cursor: default;
+    }
+
+    .preview-mode .card {
+      cursor: default;
+    }
+
+    .congrats {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background-color: rgba(0, 0, 0, 0.85);
+      color: white;
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      font-size: clamp(1.5rem, 5vw, 2.5rem);
+      z-index: 10;
+      text-align: center;
+      padding: 20px;
+    }
+
+    .congrats.active {
+      display: flex;
+    }
+
+    .congrats p {
+      margin: 15px 0;
+      font-size: clamp(1rem, 4vw, 1.8rem);
+    }
+
+    .congrats .button {
+      margin: 10px;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="screen active" id="startScreen">
+    <div class="logo"><img src="img/logo.png" alt="Game Logo"></div>
+    <h1>Memory Game</h1>
+    <button class="button" onclick="startGame()">Start Game</button>
+  </div>
+
+  <div class="screen" id="gameScreen">
+    <div class="logo game-logo"><img src="img/logo.png" alt="Game Logo"></div>
+    <div id="timer">Time: 00:00.000</div>
+    <div class="grid" id="grid"></div>
+  </div>
+
+  <div class="congrats" id="congrats">
+    🎉 Congratulations! You won! 🎉
+    <p>Your Time: <span id="finalTime">00:00.000</span></p>
+    <button class="button" onclick="restartGame()">Play Again</button>
+    <button class="button" onclick="returnToMenu()">Return to Menu</button>
+  </div>
+
+  <script>
+    const imagePaths = [
+      'img/img1.png', 'img/img2.png', 'img/img3.png', 'img/img4.png',
+      'img/img5.png', 'img/img6.png', 'img/img7.png', 'img/img8.png'
+    ];
+
+    const grid = document.getElementById('grid');
+    const timerDisplay = document.getElementById('timer');
+    const finalTimeDisplay = document.getElementById('finalTime');
+    const congratsPopup = document.getElementById('congrats');
+    const startScreen = document.getElementById('startScreen');
+    const gameScreen = document.getElementById('gameScreen');
+
+    let cards = [];
+    let firstCard = null;
+    let secondCard = null;
+    let lockBoard = false;
+    let timerInterval;
+    let milliseconds = 0;
+    let seconds = 0;
+    let minutes = 0;
+    let matchCounter = 0;
+    let previewTimeout;
+
+    // Preload images to prevent lag
+    function preloadImages() {
+      imagePaths.forEach(path => {
+        const img = new Image();
+        img.src = path;
+      });
+    }
+
+    function createCardElement(imagePath) {
+      const card = document.createElement('div');
+      card.className = 'card';
+      card.dataset.image = imagePath;
+
+      const inner = document.createElement('div');
+      inner.className = 'card-inner';
+
+      const front = document.createElement('div');
+      front.className = 'card-front';
+      const img = document.createElement('img');
+      img.src = imagePath;
+      img.alt = "Card Image";
+      front.appendChild(img);
+
+      const back = document.createElement('div');
+      back.className = 'card-back';
+
+      inner.appendChild(front);
+      inner.appendChild(back);
+      card.appendChild(inner);
+
+      card.addEventListener('click', handleCardClick);
+      return card;
+    }
+
+    function handleCardClick() {
+      if (lockBoard || this === firstCard || this.classList.contains('matched')) return;
+
+      this.classList.add('flipped');
+
+      if (!firstCard) {
+        firstCard = this;
+        return;
+      }
+
+      secondCard = this;
+      checkForMatch();
+    }
+
+    function checkForMatch() {
+      const isMatch = firstCard.dataset.image === secondCard.dataset.image;
+      isMatch ? disableCards() : unflipCards();
+    }
+
+    function disableCards() {
+      firstCard.classList.add('matched');
+      secondCard.classList.add('matched');
+      matchCounter++;
+      resetBoard();
+      checkWin();
+    }
+
+    function unflipCards() {
+      lockBoard = true;
+      setTimeout(() => {
+        firstCard.classList.remove('flipped');
+        secondCard.classList.remove('flipped');
+        resetBoard();
+      }, 1000);
+    }
+
+    function resetBoard() {
+      [firstCard, secondCard] = [null, null];
+      lockBoard = false;
+    }
+
+    function checkWin() {
+      if (matchCounter === imagePaths.length) {
+        clearInterval(timerInterval);
+        const finalTimeString = formatTime(minutes, seconds, milliseconds);
+        timerDisplay.textContent = `Final Time: ${finalTimeString}`;
+        finalTimeDisplay.textContent = finalTimeString;
+        congratsPopup.classList.add('active');
+        lockBoard = true;
+      }
+    }
+
+    function startTimer() {
+      clearInterval(timerInterval);
+      milliseconds = 0;
+      seconds = 0;
+      minutes = 0;
+      matchCounter = 0;
+      timerInterval = setInterval(updateTimer, 10);
+    }
+
+    function updateTimer() {
+      milliseconds += 10;
+      if (milliseconds === 1000) {
+        milliseconds = 0;
+        seconds++;
+        if (seconds === 60) {
+          seconds = 0;
+          minutes++;
+        }
+      }
+      timerDisplay.textContent = `Time: ${formatTime(minutes, seconds, milliseconds)}`;
+    }
+
+    function formatTime(min, sec, ms) {
+      const minutesString = String(min).padStart(2, '0');
+      const secondsString = String(sec).padStart(2, '0');
+      const millisecondsString = String(ms).padStart(3, '0');
+      return `${minutesString}:${secondsString}.${millisecondsString}`;
+    }
+
+    function shuffle(array) {
+      const newArray = [...array];
+      for (let i = newArray.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [newArray[i], newArray[j]] = [newArray[j], newArray[i]];
+      }
+      return newArray;
+    }
+
+    function initGame() {
+      clearTimeout(previewTimeout);
+      grid.innerHTML = '';
+      cards = [];
+      const shuffledCards = shuffle([...imagePaths, ...imagePaths]);
+
+      shuffledCards.forEach(imagePath => {
+        const cardElement = createCardElement(imagePath);
+        cards.push(cardElement);
+        grid.appendChild(cardElement);
+        // Flip the card to show the image during preview
+        setTimeout(() => {
+          cardElement.classList.add('flipped');
+        }, 50); // Add a small delay to ensure the element is in the DOM
+      });
+
+      // Add preview mode class to the grid (for potential styling)
+      grid.classList.add('preview-mode');
+      lockBoard = true;
+
+      // After 3 seconds, hide cards and start game
+      previewTimeout = setTimeout(() => {
+        cards.forEach(card => card.classList.remove('flipped'));
+        grid.classList.remove('preview-mode');
+        lockBoard = false;
+        startTimer();
+      }, 3000);
+    }
+
+    function startGame() {
+      startScreen.classList.remove('active');
+      gameScreen.classList.add('active');
+      preloadImages();
+      initGame();
+    }
+
+    function restartGame() {
+      congratsPopup.classList.remove('active');
+      clearInterval(timerInterval);
+      timerDisplay.textContent = "Time: 00:00.000";
+      initGame();
+    }
+
+    function returnToMenu() {
+      congratsPopup.classList.remove('active');
+      clearInterval(timerInterval);
+      gameScreen.classList.remove('active');
+      startScreen.classList.add('active');
+      timerDisplay.textContent = "Time: 00:00.000";
+    }
+
+    // Initialize image preloading when page loads
+    window.onload = preloadImages;
+  </script>
+</body>
+
+</html>
