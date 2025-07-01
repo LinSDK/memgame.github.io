@@ -1,0 +1,738 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>C-Vitt Memory Game</title>
+  <style>
+    @font-face {
+      font-family: 'Unageo';
+      src: url('fonts/Unageo-Regular.ttf');
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      font-family: 'Unageo', sans-serif;
+      background: linear-gradient(to right, orange, yellow);
+      overflow: hidden;
+      user-select: none;
+    }
+
+    body {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .screen {
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      width: 100%;
+      text-align: center;
+      padding: 20px;
+      overflow-y: auto;
+    }
+
+    .screen.active {
+      display: flex;
+    }
+
+    .logo {
+      margin-bottom: 20px;
+    }
+
+    .logo img {
+      max-width: 300px;
+      height: auto;
+    }
+
+    .game-logo {
+      position: relative;
+      top: 20px;
+      margin-bottom: 10px;
+    }
+
+    .button {
+      margin-top: 20px;
+      padding: 12px 25px;
+      font-size: clamp(1rem, 3vw, 1.5rem);
+      border: none;
+      border-radius: 5px;
+      background-color: yellow;
+      color: #333;
+      cursor: pointer;
+      font-weight: bold;
+    }
+
+    h1 {
+      color: white;
+      text-shadow: 2px 2px 4px #000;
+      font-size: clamp(1.8rem, 5vw, 3rem);
+      margin: 1vh 0;
+    }
+
+    #timer {
+      color: white;
+      font-size: clamp(1.3rem, 4vw, 2rem);
+      margin-bottom: 1.5vh;
+      text-shadow: 2px 2px 4px #000;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: clamp(5px, 1.5vw, 10px);
+      width: 100%;
+      max-width: 600px;
+      padding: 5px;
+      height: auto;
+      flex-grow: 0;
+    }
+
+    .card {
+      width: 100%;
+      aspect-ratio: 4 / 5;
+      perspective: 1000px;
+      cursor: pointer;
+    }
+
+    .card-inner {
+      width: 100%;
+      height: 100%;
+      position: relative;
+      transform-style: preserve-3d;
+      transition: transform 0.6s;
+    }
+
+    .card.flipped .card-inner {
+      transform: rotateY(180deg);
+    }
+
+    .card-front,
+    .card-back {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      backface-visibility: hidden;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+
+    .card-front {
+      background-color: white;
+      transform: rotateY(180deg);
+    }
+
+    .card-front img {
+      max-width: 80%;
+      max-height: 80%;
+      object-fit: contain;
+    }
+
+    .card-back {
+      background-color: orange;
+    }
+
+    .card.matched {
+      opacity: 0.5;
+      cursor: default;
+    }
+
+    .preview-mode .card {
+      cursor: default;
+    }
+
+    .congrats {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background-color: transparent; /* Initially transparent */
+      color: white;
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      font-size: clamp(1.5rem, 5vw, 2.5rem);
+      z-index: 10;
+      text-align: center;
+      padding: 20px;
+      transition: background-color 0.5s ease-in-out, opacity 0.5s ease-in-out; /* Smooth transition */
+      opacity: 0; /* Initially hidden */
+    }
+
+    .congrats.active {
+      display: flex;
+      background-color: rgba(0, 0, 0, 0.85); /* Black overlay */
+      opacity: 1; /* Fully visible */
+    }
+
+    .congrats p {
+      margin: 15px 0;
+      font-size: clamp(1rem, 4vw, 1.8rem);
+    }
+
+    .congrats .button {
+      margin: 10px;
+    }
+
+    .game-controls {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 10px;
+      margin-top: 10px;
+      margin-bottom: 10px;
+    }
+
+    .highscore-container {
+      margin-top: 25px;
+      width: 90%;
+      max-width: 450px;
+      height: 220px;
+      background-color: rgba(255, 255, 255, 0.15);
+      border: 2px solid rgba(255, 255, 255, 0.3);
+      border-radius: 10px;
+      padding: 15px;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .highscore-container h2 {
+      color: white;
+      text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.7);
+      font-size: clamp(1.4rem, 4vw, 1.8rem);
+
+      background-color: #f6c00f;
+      padding: 10px 15px;
+      margin: -15px -15px 15px -15px;
+      border-top-left-radius: 8px;
+      border-top-right-radius: 8px;
+      text-align: center;
+      position: relative;
+      z-index: 2;
+    }
+
+    #highScoreList {
+      list-style: none;
+      padding: 10%;
+      margin: 0;
+      position: relative;
+      z-index: 1;
+    }
+
+    #highScoreList li {
+      padding: 6px 2px;
+      color: white;
+      text-shadow: 1px 1px 2px #000;
+      font-size: clamp(0.85rem, 2.5vw, 1.1rem);
+      border-bottom: 1px dashed rgba(255, 255, 255, 0.2);
+      white-space: nowrap;
+    }
+
+    #highScoreList li:last-child {
+      border-bottom: none;
+    }
+
+    @keyframes scrollUp {
+      0% {
+        transform: translateY(0);
+      }
+
+      100% {
+        transform: translateY(-50%);
+      }
+    }
+
+    /* Confetti Styles */
+    .confetti-container {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      overflow: hidden;
+      z-index: 9; /* Below the congrats popup, above the game board */
+    }
+
+    .confetti {
+      position: absolute;
+      width: 10px;
+      height: 10px;
+      background-color: #f0f0f0; /* Default color */
+      opacity: 0;
+      animation: confetti-fall 3s forwards;
+    }
+
+    .confetti.left {
+        left: 0;
+        transform: translateX(-50%) rotate(45deg);
+    }
+
+    .confetti.right {
+        right: 0;
+        transform: translateX(50%) rotate(-45deg);
+    }
+
+
+    @keyframes confetti-fall {
+      0% {
+        opacity: 0;
+        transform: translateY(-100px) rotateZ(0deg);
+      }
+      10% {
+        opacity: 1;
+      }
+      100% {
+        opacity: 0;
+        transform: translateY(100vh) rotateZ(720deg);
+      }
+    }
+  </style>
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+</head>
+
+<body>
+  <div class="screen active" id="startScreen">
+    <div class="logo"><img src="img/logo.png" alt="Game Logo"></div>
+    <h1>Memory Game</h1>
+    <button class="button" onclick="startGame()">Start Game</button>
+
+    <div class="highscore-container">
+      <h2>Top 10</h2>
+      <ul id="highScoreList">
+      </ul>
+    </div>
+  </div>
+
+  <div class="screen" id="gameScreen">
+    <div class="logo game-logo"><img src="img/logo.png" alt="Game Logo"></div>
+    <div id="timer">Time: 00:00</div>
+    <div class="grid" id="grid"></div>
+    <div class="game-controls">
+      <button class="button" id="restartButtonInGame">Restart</button>
+      <button class="button" id="homeButton">Home</button>
+    </div>
+  </div>
+
+  <div class="confetti-container" id="confettiContainer"></div>
+
+  <div class="congrats" id="congrats">
+    <span id="congratsMessage"></span> 🎉 You won! 🎉
+    <p>Your Time: <span id="finalTime">00:00</span></p>
+    <button class="button" onclick="restartGame()">Play Again</button>
+    <button class="button" onclick="returnToMenu()">Return to Menu</button>
+  </div>
+
+  <script>
+    const imagePaths = [
+      'img/img1.png', 'img/img2.png', 'img/img3.png', 'img/img4.png',
+      'img/img5.png', 'img/img6.png', 'img/img7.png', 'img/img8.png'
+    ];
+
+    const grid = document.getElementById('grid');
+    const timerDisplay = document.getElementById('timer');
+    const finalTimeDisplay = document.getElementById('finalTime');
+    const congratsPopup = document.getElementById('congrats');
+    const startScreen = document.getElementById('startScreen');
+    const gameScreen = document.getElementById('gameScreen');
+    const restartButtonInGame = document.getElementById('restartButtonInGame');
+    const homeButton = document.getElementById('homeButton');
+    const highScoreListElement = document.getElementById('highScoreList');
+    const congratsMessage = document.getElementById('congratsMessage');
+    const confettiContainer = document.getElementById('confettiContainer');
+
+    const namePart1 = ['Fancy', 'Zesty', 'Citrussy', 'Cool', 'Refreshed', 'Healthy', 'Beautiful', 'Sunny', 'Golden', 'Vibrant', 'Sparkling', 'Juicy'];
+    const namePart2 = ['Lemon', 'Orange', 'Lime', 'Grapefruit', 'Clementine', 'Tangerine', 'Yuzu', 'Pomelo'];
+
+    let cards = [];
+    let firstCard = null;
+    let secondCard = null;
+    let lockBoard = false;
+    let timerInterval;
+    let milliseconds = 0;
+    let seconds = 0;
+    let minutes = 0;
+    let matchCounter = 0;
+    let previewTimeout;
+    let playerName = '';
+
+    function generatePlayerName() {
+      const part1 = namePart1[Math.floor(Math.random() * namePart1.length)];
+      const part2 = namePart2[Math.floor(Math.random() * namePart2.length)];
+      return `${part1} ${part2}`;
+    }
+
+    function setCookie(name, value, days) {
+      let expires = "";
+      if (days) {
+        const date = new Date();
+        date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000));
+        expires = "; expires=" + date.toUTCString();
+      }
+      document.cookie = name + "=" + (JSON.stringify(value) || "") + expires + "; path=/; SameSite=Lax";
+    }
+
+    function getCookie(name) {
+      const nameEQ = name + "=";
+      const ca = document.cookie.split(';');
+      for (let i = 0; i < ca.length; i++) {
+        let c = ca[i];
+        while (c.charAt(0) === ' ') c = c.substring(1, c.length);
+        if (c.indexOf(nameEQ) === 0) {
+          try {
+            return JSON.parse(c.substring(nameEQ.length, c.length));
+          } catch (e) {
+            console.error("Error parsing cookie:", e);
+            return null;
+          }
+        }
+      }
+      return null;
+    }
+
+    function loadHighScores() {
+      const scores = getCookie('memoryGameHighScores');
+      return Array.isArray(scores) ? scores : [];
+    }
+
+    function saveHighScores(scores) {
+      scores.sort((a, b) => a.timeMs - b.timeMs);
+      const top10 = scores.slice(0, 10);
+      setCookie('memoryGameHighScores', top10, 365);
+      return top10;
+    }
+
+    function addHighScore(timeMs, timeFormatted) {
+      playerName = generatePlayerName(); // Generate name when adding high score
+      let highScores = loadHighScores();
+      highScores.push({
+        name: playerName,
+        timeMs: timeMs,
+        timeFormatted: timeFormatted
+      });
+      saveHighScores(highScores);
+      updateAndDisplayHighScores();
+    }
+
+    function populateHighScoreList(scores) {
+      highScoreListElement.innerHTML = '';
+      if (scores.length === 0) {
+        const noScoresItem = document.createElement('li');
+        noScoresItem.textContent = 'No high scores yet! Be the first!';
+        highScoreListElement.appendChild(noScoresItem);
+        return false;
+      }
+      scores.forEach(score => {
+        const listItem = document.createElement('li');
+        listItem.textContent = `${score.name} - ${score.timeFormatted}`;
+        highScoreListElement.appendChild(listItem);
+      });
+      return true;
+    }
+
+    function updateAndDisplayHighScores() {
+      const scores = loadHighScores();
+      const hasScores = populateHighScoreList(scores);
+      highScoreListElement.style.animation = 'none';
+      if (hasScores && scores.length > 0) {
+        let originalContentHeight = 0;
+        if (highScoreListElement.children.length > 0) {
+          const sampleSize = Math.min(5, highScoreListElement.children.length);
+          let sampleHeight = 0;
+          for (let i = 0; i < sampleSize; i++) {
+            sampleHeight += highScoreListElement.children[i].offsetHeight;
+          }
+          originalContentHeight = (sampleHeight / sampleSize) * scores.length;
+          if (isNaN(originalContentHeight) || originalContentHeight === 0) {
+            originalContentHeight = scores.length * 25;
+          }
+        } else {
+          originalContentHeight = scores.length * 25;
+        }
+
+        if (scores.length > 0) {
+          void highScoreListElement.offsetHeight;
+          const scrollSpeed = 35;
+          const duration = Math.max(5, originalContentHeight / scrollSpeed);
+          highScoreListElement.style.animation = `scrollUp ${duration}s linear infinite`;
+        }
+      } else {
+        highScoreListElement.style.animation = 'none';
+      }
+    }
+
+    function preloadImages() {
+      imagePaths.forEach(path => {
+        const img = new Image();
+        img.src = path;
+      });
+    }
+
+    function createCardElement(imagePath) {
+      const card = document.createElement('div');
+      card.className = 'card';
+      card.dataset.image = imagePath;
+      const inner = document.createElement('div');
+      inner.className = 'card-inner';
+      const front = document.createElement('div');
+      front.className = 'card-front';
+      const img = document.createElement('img');
+      img.src = imagePath;
+      img.alt = "Card Image";
+      front.appendChild(img);
+      const back = document.createElement('div');
+      back.className = 'card-back';
+      inner.appendChild(front);
+      inner.appendChild(back);
+      card.appendChild(inner);
+      card.addEventListener('click', handleCardClick);
+      return card;
+    }
+
+    function handleCardClick() {
+      if (lockBoard || this === firstCard || this.classList.contains('matched')) return;
+      this.classList.add('flipped');
+      if (!firstCard) {
+        firstCard = this;
+        return;
+      }
+      secondCard = this;
+      checkForMatch();
+    }
+
+    function checkForMatch() {
+      const isMatch = firstCard.dataset.image === secondCard.dataset.image;
+      isMatch ? disableCards() : unflipCards();
+    }
+
+    function disableCards() {
+      firstCard.classList.add('matched');
+      secondCard.classList.add('matched');
+      matchCounter++;
+      resetBoard();
+      checkWin();
+    }
+
+    function unflipCards() {
+      lockBoard = true;
+      setTimeout(() => {
+        if (firstCard) firstCard.classList.remove('flipped');
+        if (secondCard) secondCard.classList.remove('flipped');
+        resetBoard();
+      }, 1000);
+    }
+
+    function resetBoard() {
+      [firstCard, secondCard] = [null, null];
+      lockBoard = false;
+    }
+
+    function checkWin() {
+      if (matchCounter === imagePaths.length) {
+        clearInterval(timerInterval);
+        const finalTimeString = formatTime(minutes, seconds, milliseconds);
+        const finalTimeMilliseconds = (minutes * 60 * 1000) + (seconds * 1000) + milliseconds;
+
+        timerDisplay.textContent = `Final Time: ${finalTimeString}`;
+        finalTimeDisplay.textContent = finalTimeString;
+        lockBoard = true;
+        addHighScore(finalTimeMilliseconds, finalTimeString);
+
+        // Start confetti
+        startConfetti();
+
+        // Delay the full congratulations popup
+        setTimeout(() => {
+          congratsMessage.textContent = `Congratulations ${playerName}!`;
+          congratsPopup.classList.add('active');
+        }, 3000); // 3-second delay
+      }
+    }
+
+    function startTimer() {
+      clearInterval(timerInterval);
+      milliseconds = 0;
+      seconds = 0;
+      minutes = 0;
+      matchCounter = 0;
+      timerInterval = setInterval(updateTimer, 10);
+    }
+
+    function updateTimer() {
+      milliseconds += 10;
+      if (milliseconds >= 1000) {
+        milliseconds = 0;
+        seconds++;
+        if (seconds >= 60) {
+          seconds = 0;
+          minutes++;
+        }
+      }
+      timerDisplay.textContent = `Time: ${formatTime(minutes, seconds, milliseconds)}`;
+    }
+
+    function formatTime(min, sec, msIgnored) {
+      const minutesString = String(min).padStart(2, '0');
+      const secondsString = String(sec).padStart(2, '0');
+      return `${minutesString}:${secondsString}`;
+    }
+
+    function shuffle(array) {
+      const newArray = [...array];
+      for (let i = newArray.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [newArray[i], newArray[j]] = [newArray[j], newArray[i]];
+      }
+      return newArray;
+    }
+
+    function initGame() {
+      clearTimeout(previewTimeout);
+      grid.innerHTML = '';
+      cards = [];
+      matchCounter = 0;
+      resetBoard();
+      const shuffledCards = shuffle([...imagePaths, ...imagePaths]);
+      shuffledCards.forEach(imagePath => {
+        const cardElement = createCardElement(imagePath);
+        cards.push(cardElement);
+        grid.appendChild(cardElement);
+        setTimeout(() => {
+          cardElement.classList.add('flipped');
+        }, 50);
+      });
+      grid.classList.add('preview-mode');
+      lockBoard = true;
+      previewTimeout = setTimeout(() => {
+        cards.forEach(card => card.classList.remove('flipped'));
+        grid.classList.remove('preview-mode');
+        lockBoard = false;
+        startTimer();
+      }, 3000);
+    }
+
+    function startGame() {
+      startScreen.classList.remove('active');
+      gameScreen.classList.add('active');
+      initGame();
+    }
+
+    function restartGame() {
+      congratsPopup.classList.remove('active');
+      clearInterval(timerInterval);
+      timerDisplay.textContent = "Time: " + formatTime(0, 0, 0);
+      lockBoard = false;
+      clearConfetti(); // Clear confetti
+      initGame();
+    }
+
+    function returnToMenu() {
+      congratsPopup.classList.remove('active');
+      clearInterval(timerInterval);
+      clearTimeout(previewTimeout);
+      gameScreen.classList.remove('active');
+      startScreen.classList.add('active');
+      timerDisplay.textContent = "Time: " + formatTime(0, 0, 0);
+      lockBoard = false;
+      resetBoard();
+      grid.innerHTML = '';
+      clearConfetti(); // Clear confetti
+      updateAndDisplayHighScores();
+    }
+
+    restartButtonInGame.addEventListener('click', restartGame);
+    homeButton.addEventListener('click', returnToMenu);
+
+    // Confetti functions
+    const confettiColors = ['#f0f0f0', '#ffeb3b', '#ff9800', '#f44336', '#9c27b0', '#2196f3'];
+
+    function createConfetti() {
+      const confetti = document.createElement('div');
+      confetti.classList.add('confetti');
+      confetti.style.backgroundColor = confettiColors[Math.floor(Math.random() * confettiColors.length)];
+      confetti.style.left = `${Math.random() * 100}%`; // Random horizontal position
+      confetti.style.animationDelay = `${Math.random() * 0.5}s`; // Stagger animation
+      confetti.style.animationDuration = `${2 + Math.random() * 1}s`; // Random duration
+      
+      // Randomly assign to left or right side for initial push
+      if (Math.random() > 0.5) {
+          confetti.classList.add('left');
+          confetti.style.left = `${Math.random() * 20}%`; // More concentrated on the left
+      } else {
+          confetti.classList.add('right');
+          confetti.style.right = `${Math.random() * 20}%`; // More concentrated on the right
+      }
+
+      confettiContainer.appendChild(confetti);
+
+      confetti.addEventListener('animationend', () => {
+        confetti.remove();
+      });
+    }
+
+    let confettiInterval;
+
+    function startConfetti() {
+      const duration = 3 * 1000;
+      const animationEnd = Date.now() + duration;
+      const defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 2000 };
+
+      function randomInRange(min, max) {
+        return Math.random() * (max - min) + min;
+      }
+
+      const interval = setInterval(function () {
+        const timeLeft = animationEnd - Date.now();
+
+        if (timeLeft <= 0) {
+          return clearInterval(interval);
+        }
+
+        confetti(Object.assign({}, defaults, {
+          particleCount: 20,
+          origin: { x: 0, y: Math.random() },
+          angle: 60,
+          spread: 180,
+        }));
+
+        confetti(Object.assign({}, defaults, {
+          particleCount: 20,
+          origin: { x: 1, y: Math.random() },
+          angle: 120,
+          spread: 180,
+        }));
+      }, 50);
+    }
+
+    function clearConfetti() {
+      clearInterval(confettiInterval);
+      confettiContainer.innerHTML = '';
+    }
+
+    window.onload = () => {
+      preloadImages();
+      updateAndDisplayHighScores();
+      timerDisplay.textContent = "Time: " + formatTime(0, 0, 0);
+    };
+  </script>
+</body>
+
+</html>
