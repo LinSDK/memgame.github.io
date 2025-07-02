@@ -13,21 +13,20 @@
 
     * {
       box-sizing: border-box;
-      margin: 0;
-      padding: 0;
     }
 
-    html {
-      font-size: clamp(10px, 2vh, 22px);
+    html,
+    body {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      font-family: 'Unageo', sans-serif;
+      background: linear-gradient(to right, orange, yellow);
+      overflow: hidden;
+      user-select: none;
     }
 
     body {
-      height: 95vh; /* Full viewport height */
-      width: 100vw;  /* Full viewport width */
-      font-family: 'Unageo', sans-serif;
-      background: linear-gradient(to right, orange, yellow);
-      overflow: hidden; /* Prevents scrollbars */
-      user-select: none;
       display: flex;
       flex-direction: column;
       align-items: center;
@@ -39,11 +38,11 @@
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      height: 100%; /* Take full height of the body */
+      height: 100vh;
       width: 100%;
       text-align: center;
-      padding: 2vh; /* Padding scales with height */
-      overflow-y: auto; /* Allow scrolling on very small screens if content overflows */
+      padding: 20px;
+      overflow-y: auto;
     }
 
     .screen.active {
@@ -51,50 +50,42 @@
     }
 
     .logo {
-      margin-bottom: 2vh;
+      margin-bottom: 20px;
     }
 
     .logo img {
-      /* Logo height scales with the viewport height */
-      max-height: 15vh;
-      width: auto;
+      max-width: 300px;
+      height: auto;
     }
 
     .game-logo {
-      /* Reduced top margin for in-game screen */
-      margin-top: -2vh;
-      margin-bottom: 1vh;
-    }
-    
-    .game-logo img {
-        max-height: 10vh; /* Smaller logo in game view */
+      position: relative;
+      top: 20px;
+      margin-bottom: 10px;
     }
 
     .button {
-      margin-top: 2vh;
-      /* Padding and font size use 'rem' to scale */
-      padding: 0.8rem 1.5rem;
-      font-size: 1.2rem;
+      margin-top: 20px;
+      padding: 12px 25px;
+      font-size: clamp(1rem, 3vw, 1.5rem);
       border: none;
-      border-radius: 0.5rem;
+      border-radius: 5px;
       background-color: yellow;
       color: #333;
       cursor: pointer;
       font-weight: bold;
-      display: flex;
     }
 
     h1 {
       color: white;
       text-shadow: 2px 2px 4px #000;
-      /* Font size scales with 'rem' */
-      font-size: 3rem;
+      font-size: clamp(1.8rem, 5vw, 3rem);
       margin: 1vh 0;
     }
 
     #timer {
       color: white;
-      font-size: 1.8rem;
+      font-size: clamp(1.3rem, 4vw, 2rem);
       margin-bottom: 1.5vh;
       text-shadow: 2px 2px 4px #000;
     }
@@ -102,21 +93,17 @@
     .grid {
       display: grid;
       grid-template-columns: repeat(4, 1fr);
-      /* The grid now uses 'vmin' (the smaller of viewport width or height)
-        to ensure it stays squarish and fits on any screen without distortion.
-        The gap also scales with vmin.
-      */
-      width: 90vmin;
+      gap: clamp(5px, 1.5vw, 10px);
+      width: 100%;
+      max-width: 600px;
+      padding: 5px;
       height: auto;
-      aspect-ratio: 4 / 5; /* Maintain aspect ratio of the grid based on cards */
-      max-width: 95vw;
-      max-height: 65vh; /* Prevent grid from being excessively tall */
-      gap: 1vmin;
+      flex-grow: 0;
     }
 
     .card {
       width: 100%;
-      height: 100%;
+      aspect-ratio: 4 / 5;
       perspective: 1000px;
       cursor: pointer;
     }
@@ -139,8 +126,7 @@
       width: 100%;
       height: 100%;
       backface-visibility: hidden;
-      /* Border radius scales with vmin from the grid */
-      border-radius: 1vmin;
+      border-radius: 10px;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -177,54 +163,53 @@
       left: 0;
       width: 100vw;
       height: 100vh;
-      background-color: transparent;
+      background-color: transparent; /* Initially transparent */
       color: white;
       display: none;
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      font-size: 2.5rem; /* Scalable font size */
+      font-size: clamp(1.5rem, 5vw, 2.5rem);
       z-index: 10;
       text-align: center;
-      padding: 2vh;
-      transition: background-color 0.5s ease-in-out, opacity 0.5s ease-in-out;
-      opacity: 0;
+      padding: 20px;
+      transition: background-color 0.5s ease-in-out, opacity 0.5s ease-in-out; /* Smooth transition */
+      opacity: 0; /* Initially hidden */
     }
 
     .congrats.active {
       display: flex;
-      background-color: rgba(0, 0, 0, 0.85);
-      opacity: 1;
+      background-color: rgba(0, 0, 0, 0.85); /* Black overlay */
+      opacity: 1; /* Fully visible */
     }
 
     .congrats p {
-      margin: 1.5vh 0;
-      font-size: 1.5rem; /* Scalable font size */
+      margin: 15px 0;
+      font-size: clamp(1rem, 4vw, 1.8rem);
     }
 
     .congrats .button {
-      margin: 1vh;
+      margin: 10px;
     }
 
     .game-controls {
       display: flex;
       flex-wrap: wrap;
       justify-content: center;
-      gap: 1rem;
-      margin-top: 1.5vh;
+      gap: 10px;
+      margin-top: 10px;
+      margin-bottom: 10px;
     }
 
     .highscore-container {
-      margin-top: 2.5vh;
-      /* Highscore box scales with the screen */
-      width: 90vw;
-      max-width: 60vh;
-      height: auto;
-      min-height: 25vh; /* Ensures it has a minimum height */
+      margin-top: 25px;
+      width: 90%;
+      max-width: 450px;
+      height: 220px;
       background-color: rgba(255, 255, 255, 0.15);
       border: 2px solid rgba(255, 255, 255, 0.3);
-      border-radius: 1.5vh;
-      padding: 1.5vh;
+      border-radius: 10px;
+      padding: 15px;
       overflow: hidden;
       position: relative;
     }
@@ -232,12 +217,13 @@
     .highscore-container h2 {
       color: white;
       text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.7);
-      font-size: 1.8rem; /* Scalable font size */
+      font-size: clamp(1.4rem, 4vw, 1.8rem);
+
       background-color: #f6c00f;
-      padding: 1rem;
-      margin: -1.5vh -1.5vh 1.5vh -1.5vh;
-      border-top-left-radius: 1.2vh;
-      border-top-right-radius: 1.2vh;
+      padding: 10px 15px;
+      margin: -15px -15px 15px -15px;
+      border-top-left-radius: 8px;
+      border-top-right-radius: 8px;
       text-align: center;
       position: relative;
       z-index: 2;
@@ -245,17 +231,17 @@
 
     #highScoreList {
       list-style: none;
-      padding: 0;
+      padding: 10%;
       margin: 0;
       position: relative;
       z-index: 1;
     }
 
     #highScoreList li {
-      padding: 0.8vh 0.2vh;
+      padding: 6px 2px;
       color: white;
       text-shadow: 1px 1px 2px #000;
-      font-size: 1.1rem; /* Scalable font size */
+      font-size: clamp(0.85rem, 2.5vw, 1.1rem);
       border-bottom: 1px dashed rgba(255, 255, 255, 0.2);
       white-space: nowrap;
     }
@@ -274,6 +260,7 @@
       }
     }
 
+    /* Confetti Styles */
     .confetti-container {
       position: fixed;
       top: 0;
@@ -282,17 +269,49 @@
       height: 100%;
       pointer-events: none;
       overflow: hidden;
-      z-index: 9;
+      z-index: 9; /* Below the congrats popup, above the game board */
+    }
+
+    .confetti {
+      position: absolute;
+      width: 10px;
+      height: 10px;
+      background-color: #f0f0f0; /* Default color */
+      opacity: 0;
+      animation: confetti-fall 3s forwards;
+    }
+
+    .confetti.left {
+        left: 0;
+        transform: translateX(-50%) rotate(45deg);
+    }
+
+    .confetti.right {
+        right: 0;
+        transform: translateX(50%) rotate(-45deg);
+    }
+
+
+    @keyframes confetti-fall {
+      0% {
+        opacity: 0;
+        transform: translateY(-100px) rotateZ(0deg);
+      }
+      10% {
+        opacity: 1;
+      }
+      100% {
+        opacity: 0;
+        transform: translateY(100vh) rotateZ(720deg);
+      }
     }
   </style>
-  <!-- Using the official canvas-confetti library -->
   <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
 </head>
 
 <body>
-  <!-- The HTML structure remains the same, no changes needed here -->
   <div class="screen active" id="startScreen">
-    <div class="logo game-logo"><img src="img/logo.png" alt="Game Logo"></div>
+    <div class="logo"><img src="img/logo.png" alt="Game Logo"></div>
     <h1>Memory Game</h1>
     <button class="button" onclick="startGame()">Start Game</button>
 
@@ -433,13 +452,28 @@
       const scores = loadHighScores();
       const hasScores = populateHighScoreList(scores);
       highScoreListElement.style.animation = 'none';
-      if (hasScores && scores.length > 5) { // Only scroll if there are enough scores
-        // The logic to calculate scroll duration is robust enough to handle scaled font sizes
-        let originalContentHeight = highScoreListElement.scrollHeight;
-        void highScoreListElement.offsetHeight; // Trigger reflow
-        const scrollSpeed = 35; // pixels per second
-        const duration = Math.max(5, originalContentHeight / scrollSpeed);
-        highScoreListElement.style.animation = `scrollUp ${duration}s linear infinite`;
+      if (hasScores && scores.length > 0) {
+        let originalContentHeight = 0;
+        if (highScoreListElement.children.length > 0) {
+          const sampleSize = Math.min(5, highScoreListElement.children.length);
+          let sampleHeight = 0;
+          for (let i = 0; i < sampleSize; i++) {
+            sampleHeight += highScoreListElement.children[i].offsetHeight;
+          }
+          originalContentHeight = (sampleHeight / sampleSize) * scores.length;
+          if (isNaN(originalContentHeight) || originalContentHeight === 0) {
+            originalContentHeight = scores.length * 25;
+          }
+        } else {
+          originalContentHeight = scores.length * 25;
+        }
+
+        if (scores.length > 0) {
+          void highScoreListElement.offsetHeight;
+          const scrollSpeed = 35;
+          const duration = Math.max(5, originalContentHeight / scrollSpeed);
+          highScoreListElement.style.animation = `scrollUp ${duration}s linear infinite`;
+        }
       } else {
         highScoreListElement.style.animation = 'none';
       }
@@ -514,7 +548,7 @@
     function checkWin() {
       if (matchCounter === imagePaths.length) {
         clearInterval(timerInterval);
-        const finalTimeString = formatTime(minutes, seconds);
+        const finalTimeString = formatTime(minutes, seconds, milliseconds);
         const finalTimeMilliseconds = (minutes * 60 * 1000) + (seconds * 1000) + milliseconds;
 
         timerDisplay.textContent = `Final Time: ${finalTimeString}`;
@@ -522,12 +556,14 @@
         lockBoard = true;
         addHighScore(finalTimeMilliseconds, finalTimeString);
 
+        // Start confetti
         startConfetti();
 
+        // Delay the full congratulations popup
         setTimeout(() => {
           congratsMessage.textContent = `Congratulations ${playerName}!`;
           congratsPopup.classList.add('active');
-        }, 3000);
+        }, 3000); // 3-second delay
       }
     }
 
@@ -550,10 +586,10 @@
           minutes++;
         }
       }
-      timerDisplay.textContent = `Time: ${formatTime(minutes, seconds)}`;
+      timerDisplay.textContent = `Time: ${formatTime(minutes, seconds, milliseconds)}`;
     }
 
-    function formatTime(min, sec) {
+    function formatTime(min, sec, msIgnored) {
       const minutesString = String(min).padStart(2, '0');
       const secondsString = String(sec).padStart(2, '0');
       return `${minutesString}:${secondsString}`;
@@ -602,8 +638,9 @@
     function restartGame() {
       congratsPopup.classList.remove('active');
       clearInterval(timerInterval);
-      timerDisplay.textContent = "Time: " + formatTime(0, 0);
+      timerDisplay.textContent = "Time: " + formatTime(0, 0, 0);
       lockBoard = false;
+      clearConfetti(); // Clear confetti
       initGame();
     }
 
@@ -613,10 +650,11 @@
       clearTimeout(previewTimeout);
       gameScreen.classList.remove('active');
       startScreen.classList.add('active');
-      timerDisplay.textContent = "Time: " + formatTime(0, 0);
+      timerDisplay.textContent = "Time: " + formatTime(0, 0, 0);
       lockBoard = false;
       resetBoard();
       grid.innerHTML = '';
+      clearConfetti(); // Clear confetti
       updateAndDisplayHighScores();
     }
 
