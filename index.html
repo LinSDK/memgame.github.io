@@ -326,6 +326,10 @@
   </div>
 
   <script>
+    if (typeof navigator.serviceWorker !== 'undefined') {
+      navigator.serviceWorker.register('sw.js')
+    }
+    
     const imagePaths = [
       'img/img1.png', 'img/img2.png', 'img/img3.png', 'img/img4.png',
       'img/img5.png', 'img/img6.png', 'img/img7.png', 'img/img8.png'
@@ -357,7 +361,7 @@
     let matchCounter = 0;
     let previewTimeout;
     let playerName = '';
-
+    
     function generatePlayerName() {
       const part1 = namePart1[Math.floor(Math.random() * namePart1.length)];
       const part2 = namePart2[Math.floor(Math.random() * namePart2.length)];
@@ -697,18 +701,6 @@
       updateAndDisplayHighScores();
       timerDisplay.textContent = "Time: " + formatTime(0, 0, 0);
     };
-
-  if ('serviceWorker' in navigator) {
-    window.addEventListener('load', function() {
-      navigator.serviceWorker.register('/sw.js').then(function(registration) {
-        // Registration was successful
-        console.log('ServiceWorker registration successful with scope: ', registration.scope);
-      }, function(err) {
-        // registration failed :(
-        console.log('ServiceWorker registration failed: ', err);
-      });
-    });
-  }
   </script>
 </body>
 
