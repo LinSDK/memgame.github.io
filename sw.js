@@ -1,20 +1,20 @@
 const CACHE_NAME = 'my-app-cache-v1';
 const urlsToCache = [
-  "/",
-  '/index.html',
-  '/fonts/Unageo-Regular.ttf',
-  '/img/img1.png',
-  '/img/img2.png',
-  '/img/img3.png',
-  '/img/img4.png',
-  '/img/img5.png',
-  '/img/img6.png',
-  '/img/img7.png',
-  '/img/img8.png',
-  '/img/logo.png',
-  '/confetti.browser.min.js',
-  '/icon512_rounded.png',
-  '/icon512_maskable.png'
+  "./",
+  './index.html',
+  './fonts/Unageo-Regular.ttf',
+  './img/img1.png',
+  './img/img2.png',
+  './img/img3.png',
+  './img/img4.png',
+  './img/img5.png',
+  './img/img6.png',
+  './img/img7.png',
+  './img/img8.png',
+  './img/logo.png',
+  './confetti.browser.min.js',
+  './icon512_rounded.png',
+  './icon512_maskable.png'
 ];
 
 self.addEventListener('install', event => {
