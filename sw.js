@@ -1,5 +1,8 @@
 const CACHE_NAME = 'my-app-cache-v1';
 const urlsToCache = [
+  "/",
+  '/index.html',
+  '/fonts/Unageo-Regular.ttf',
   '/img/img1.png',
   '/img/img2.png',
   '/img/img3.png',
@@ -9,8 +12,6 @@ const urlsToCache = [
   '/img/img7.png',
   '/img/img8.png',
   '/img/logo.png',
-  '/index.html',
-  '/fonts/Unageo-Regular.ttf',
   '/confetti.browser.min.js',
   '/icon512_rounded.png',
   '/icon512_maskable.png'
