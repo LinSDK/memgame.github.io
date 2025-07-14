@@ -1,0 +1,8 @@
+[{
+      "relation": ["delegate_permission/common.handle_all_urls"],
+      "target": {
+        "namespace": "android_app",
+        "package_name": "io.github.linsdk.twa",
+        "sha256_cert_fingerprints": ["07:5C:E4:08:3F:DB:F8:BC:44:91:4C:74:B9:B4:EE:D9:98:46:77:C9:9D:2B:34:1C:3B:8C:68:30:01:E6:A4:0B"]
+      }
+    }]
