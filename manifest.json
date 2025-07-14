@@ -13,13 +13,12 @@
         "type":"image/png"}
     ],
     "orientation":"portrait",
-    "display":"standalone",
-    "permissions": ["fullscreen"],
+    "display":"fullscreen",
     "dir":"auto",
     "lang":"en-US",
     "name":"C-Vitt Memory Game",
     "short_name":"CVM",
-    "start_url":"/memgame.github.io/index.html",
+    "start_url":"/memgame.github.io/index.html?fullscreen=true",
     "scope":"/memgame.github.io/",
     "description":"Memory game for C-Vitt"
 }
