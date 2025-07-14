@@ -18,7 +18,7 @@
     "lang":"en-US",
     "name":"C-Vitt Memory Game",
     "short_name":"CVM",
-    "start_url":"/memgame.github.io/index.html?fullscreen=true",
-    "scope":"/memgame.github.io/",
+    "start_url":"https://linsdk.github.io/memgame.github.io/index.html?fullscreen=true",
+    "scope":"https://linsdk.github.io/memgame.github.io/",
     "description":"Memory game for C-Vitt"
 }
